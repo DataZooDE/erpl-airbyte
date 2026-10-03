@@ -10,9 +10,14 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   static:
     name: Lint and unit tests
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,6 +34,7 @@ jobs:
 
   image:
     name: Build the connector image and run Airbyte's standard tests
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -81,6 +87,7 @@ jobs:
     name: End-to-end against the SAP sandbox
     # The ABAP trial is too large for a hosted runner; this needs the self-hosted
     # box where the a4h container lives.
+    timeout-minutes: 20
     runs-on: [self-hosted, sap-sandbox]
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     defaults:
